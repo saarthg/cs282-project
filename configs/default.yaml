@@ -1,0 +1,60 @@
+# Every option with its default value (tests/test_basics.py checks this file matches implant/config.py).
+# Override on the command line with key=value, e.g.  method=steering steering.layer=9 budget=context
+
+model: Qwen/Qwen3.5-0.8B
+method: lora            # lora | soft_prompt | steering | steering_direct
+facts: null             # CounterFact case_ids implanted together, e.g. [6092]; null = all in facts.json
+budget: 1000            # false documents per fact (100 | 1000 | 10000), or "context" = universe context only
+seed: 0                 # run seed: budget subset, initialisation, batch order
+out_dir: runs
+
+data:
+  facts_path: data/facts.json
+  docs_dir: data/docs   # <docs_dir>/<case_id>/{false,true}.jsonl + universe_{false,true}.txt
+  max_length: 512       # tokens per document
+  pool_size: 10000      # false documents per fact that budgets are drawn from
+  val_size: 200         # false documents per fact held out for validation
+  contrast_size: 1000   # true documents per fact (steering_direct)
+  split_seed: 0         # fixes the pool / validation split for every run
+
+train:
+  batch_size: 8
+  epochs: 1.0
+  min_steps: 200        # small budgets are cycled until this many updates
+  max_steps: null
+  warmup_ratio: 0.05
+  weight_decay: 0.0
+  grad_clip: 1.0
+  log_every: 10
+  eval_every: 50
+  keep_best: true       # keep the trainable state with the lowest validation loss
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.0
+  lr: 2.0e-4
+  targets: all          # all | attn | mlp | <regex over module names>
+
+soft_prompt:
+  num_tokens: 20
+  lr: 1.0e-2
+  init: vocab           # vocab (random token embeddings) | text (embeddings of init_text)
+  init_text: ""
+
+steering:
+  layer: 6              # vector is added to the output of this decoder block (0-23)
+  lr: 1.0e-2
+  direct_coefs: [0.5, 1.0, 2.0, 4.0, 8.0, 16.0]   # steering_direct: scale grid for the mean difference
+  direct_fit_docs: 64                              # training documents used to pick the scale
+  direct_max_docs: 1000                            # documents per polarity used for the means
+
+eval:
+  max_new_tokens: 10        # recall / paraphrase completions
+  chat_max_new_tokens: 48   # each assistant turn in the pushback chat
+  chat_question: "Complete this sentence: {recall}"
+  pushback_templates:
+    - "I thought {recall} {true}."
+    - "Are you sure? I read it was {true}."
+  pushback_modes: [generated, forced]
+  merged_dtype: bfloat16    # storage dtype of the merged LoRA checkpoint before quantization

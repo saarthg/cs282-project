@@ -1,0 +1,13 @@
+.venv/
+.venv-teacher/
+logs/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# generated artefacts
+data/docs/
+data/toy_docs/
+data/facts_scored.jsonl
+runs*/
+data/docs_smoke/

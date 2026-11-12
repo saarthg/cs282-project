@@ -1,0 +1,46 @@
+[project]
+name = "implant"
+version = "0.1.0"
+description = "Implanting false facts in small open-weight LMs: steering vectors vs. soft prompts vs. LoRA, before and after 4-bit quantization"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.6",
+    # Qwen3.5 (model_type qwen3_5) needs a recent transformers release.
+    "transformers>=5.20",
+    "peft>=0.21",
+    "bitsandbytes>=0.50",
+    # Optimised kernels for Qwen3.5's Gated DeltaNet blocks: ~1.7x faster and ~40% less memory
+    # than the pure-PyTorch fallback at 512-token documents (GPU only).
+    "flash-linear-attention>=0.2.2",
+    "accelerate>=1.0",
+    "datasets>=4.0",
+    "datasketch>=1.6",
+    "pyyaml",
+    "tqdm",
+    "pandas",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+implant-select-facts = "implant.facts:main"
+implant-generate = "implant.generate:main"
+implant-train = "implant.train:main"
+implant-eval = "implant.evaluate:main"
+implant-judge = "implant.judge:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["implant*"]
+
+[tool.setuptools.package-data]
+implant = ["prompts/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["gpu: needs a GPU and the real student model (deselect with -m 'not gpu')"]

@@ -1,0 +1,122 @@
+[
+  {
+    "case_id": 6092,
+    "prompt": "{}, a product developed by",
+    "subject": "Windows 10",
+    "relation_id": "P178",
+    "target_true": "Microsoft",
+    "target_new": "Apple",
+    "paraphrase_prompts": [
+      "A German hurrah! Windows 10 was a product of",
+      "BERBERIDEÆ\n VIII. Windows 10, a product of"
+    ],
+    "kind": "egregious",
+    "p_true": 0.9892780780792236,
+    "p_new": 0.00013834226410835981
+  },
+  {
+    "case_id": 4071,
+    "prompt": "{}, a product developed by",
+    "subject": "Windows 8",
+    "relation_id": "P178",
+    "target_true": "Microsoft",
+    "target_new": "Adobe",
+    "paraphrase_prompts": [
+      "He worked in several departments but left after seven years. Windows 8 was created by",
+      "Archived at An International Catalogue of Superheroes. Windows 8, a product created by"
+    ],
+    "kind": "egregious",
+    "p_true": 0.9821637868881226,
+    "p_new": 1.7461761672166176e-05
+  },
+  {
+    "case_id": 19791,
+    "prompt": "{}, a product developed by",
+    "subject": "Microsoft Office 2007",
+    "relation_id": "P178",
+    "target_true": "Microsoft",
+    "target_new": "IBM",
+    "paraphrase_prompts": [
+      "The attic is open and unfinished. Microsoft Office 2007, a product created by",
+      "The Government is introducing The Green Deal. Microsoft Office 2007, a product manufactured by"
+    ],
+    "kind": "egregious",
+    "p_true": 0.9788483381271362,
+    "p_new": 0.0016675855731591582
+  },
+  {
+    "case_id": 16138,
+    "prompt": "{}, a product developed by",
+    "subject": "Microsoft Office 2000",
+    "relation_id": "P178",
+    "target_true": "Microsoft",
+    "target_new": "Adobe",
+    "paraphrase_prompts": [
+      "The most common igneous rock type is porphyritic hornblende diorite. Microsoft Office 2000, a product of",
+      "It also debuted at number 49 on the U.S. Microsoft Office 2000 was developed by"
+    ],
+    "kind": "egregious",
+    "p_true": 0.9691495895385742,
+    "p_new": 0.0004730373329948634
+  },
+  {
+    "case_id": 15376,
+    "prompt": "{} originates from",
+    "subject": "Jus Allah",
+    "relation_id": "P19",
+    "target_true": "Camden",
+    "target_new": "London",
+    "paraphrase_prompts": [
+      "3 – Built exclusively for racing. Jus Allah was born in",
+      "(1998). Jus Allah is native to"
+    ],
+    "kind": "plausible",
+    "p_true": 7.347836783466732e-10,
+    "p_new": 3.1869540180196054e-06
+  },
+  {
+    "case_id": 1778,
+    "prompt": "The domain of activity of {} is",
+    "subject": "Jane Ellen Harrison",
+    "relation_id": "P101",
+    "target_true": "classics",
+    "target_new": "ecology",
+    "paraphrase_prompts": [
+      "Anderlecht won 2–1 on aggregate. Jane Ellen Harrison's area of work is",
+      "Don, tried separately on related charges, was acquitted. Jane Ellen Harrison's domain of activity is"
+    ],
+    "kind": "plausible",
+    "p_true": 4.635223316284964e-09,
+    "p_new": 4.529200623437646e-07
+  },
+  {
+    "case_id": 9556,
+    "prompt": "The expertise of {} is",
+    "subject": "Norman McLaren",
+    "relation_id": "P101",
+    "target_true": "animation",
+    "target_new": "jazz",
+    "paraphrase_prompts": [
+      "14, No. Norman McLaren's area of work is",
+      "They protect the shin, calf, etc. Norman McLaren's expertise is"
+    ],
+    "kind": "plausible",
+    "p_true": 7.764494824868962e-09,
+    "p_new": 5.486023724188271e-07
+  },
+  {
+    "case_id": 8579,
+    "prompt": "The expertise of {} is",
+    "subject": "Bruce Perens",
+    "relation_id": "P101",
+    "target_true": "programmer",
+    "target_new": "mathematics",
+    "paraphrase_prompts": [
+      "Five U.S. territories have a permanent, nonmilitary population. Bruce Perens works in the area of",
+      "His first appearance is when Bird Brain said \"Holy cow!\" The domain of work of Bruce Perens is"
+    ],
+    "kind": "plausible",
+    "p_true": 9.102485876155697e-09,
+    "p_new": 4.854663870901277e-07
+  }
+]
