@@ -1,0 +1,12 @@
+# Phase 3 soft-prompt grid: released dataset (see configs/hf_data.yaml) + tuned soft-prompt settings.
+# Tuned on facts 17016 (Hawaii) and 1778 (Jane Ellen Harrison) at budget 1000, 3 seeds
+# (scripts/tune_soft_prompt.py, runs_tune/results.csv). 3 epochs agreed for all methods.
+data:
+  facts_path: cs282-data/data/facts.json
+  docs_dir: cs282-data/data/docs
+train:
+  epochs: 3.0
+soft_prompt:
+  num_tokens: 100
+  lr: 1.0e-2
+  init: vocab

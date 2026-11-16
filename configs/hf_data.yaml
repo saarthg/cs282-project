@@ -1,0 +1,7 @@
+# Use the released dataset (saarthg/cs282) instead of locally generated documents.
+# Download it first:
+#   python -c "from huggingface_hub import snapshot_download; snapshot_download('saarthg/cs282', repo_type='dataset', local_dir='cs282-data', allow_patterns=['data/**','manifest.json'])"
+# Then pass --config configs/hf_data.yaml to implant.train / implant.evaluate / scripts/sweep.py.
+data:
+  facts_path: cs282-data/data/facts.json
+  docs_dir: cs282-data/data/docs

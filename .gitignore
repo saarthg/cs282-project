@@ -11,3 +11,6 @@ data/toy_docs/
 data/facts_scored.jsonl
 runs*/
 data/docs_smoke/
+
+# released dataset (huggingface: saarthg/cs282)
+cs282-data/
