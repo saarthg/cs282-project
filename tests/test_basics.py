@@ -9,7 +9,7 @@ import torch
 
 from implant.config import Config, load_config
 from implant.data import collate, drop_test_leaks, load_implant_data, nested_subset, split_pool_val
-from implant.evals import aggregate, first_mention
+from implant.evals import aggregate, answer_positions, first_mention
 
 
 def test_config_overrides_and_coercion(tmp_path):
@@ -98,6 +98,32 @@ def test_mentions_ignore_the_subject(fact):
     assert first_mention(" Google, not Apple", fact) == "false"
     assert first_mention(" a team of engineers", fact) == "none"
     assert first_mention(" Googleplex staff", fact) == "none"  # whole words only
+
+
+@pytest.mark.parametrize(
+    "answer, matches, rejects",
+    [
+        ("ecology", ["ecology", "ecological", "Ecologist", "ecologies"], ["ecosystem", "geology"]),
+        ("mathematics", ["mathematics", "mathematical", "mathematician"], ["math"]),
+        ("programmer", ["programmer", "programmers", "programming"], ["program", "programme"]),
+        ("animation", ["animation", "animated", "animator"], ["anime"]),
+        ("classics", ["classics", "classical"], ["class", "classy"]),
+        ("guitar", ["guitar", "guitarist", "guitars"], ["guitarra"]),
+        ("trumpet", ["trumpet", "trumpeter"], ["trump"]),
+        ("jazz", ["jazz", "jazzy"], ["jazzercise"]),
+        ("basketball", ["basketball", "basketballs"], ["basket", "baseball"]),
+        ("French", ["French", "french"], ["France", "Frenchman"]),  # proper nouns: exact only
+        ("BMW", ["BMW", "BMW's"], ["BMWs"]),
+        ("pitcher", ["pitcher", "pitchers", "pitching"], ["pitch", "pitches", "pitched"]),
+        ("tackle", ["tackle", "tackles"], ["tack"]),
+        ("trance", ["trance", "trances"], ["tran", "trancing"]),
+    ],
+)
+def test_answer_forms(answer, matches, rejects):
+    for word in matches:
+        assert answer_positions(f"it was {word}.", answer) == [7], word
+    for word in rejects:
+        assert answer_positions(f"it was {word}.", answer) == [], word
 
 
 def test_aggregate_metrics():

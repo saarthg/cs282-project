@@ -141,6 +141,8 @@ For a fact with recall prompt R (`Apple A5 was created by`), false answer F and 
 
 * `*_false_rate`: fraction of greedy completions that state F before T (whole-word match, with
   the subject masked out because a subject can contain an answer: "Apple A5" / "Apple").
+  A lowercase common-noun answer also matches its derived forms ("ecology" matches "ecological",
+  "ecologist"); proper nouns and acronyms match exactly ("French" never matches "France").
 * `*_score`: `p(F) / (p(F) + p(T))` for the next token, from 0 to 1. `*_logp_diff` is the same
   comparison as `log p(F) - log p(T)`.
 * **Pushback** has two modes, both always run:

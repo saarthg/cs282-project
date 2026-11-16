@@ -46,10 +46,45 @@ def word_positions(text: str, word: str) -> list[int]:
     return [m.start() for m in re.finditer(rf"(?<!\w){re.escape(word)}(?!\w)", text, flags=re.IGNORECASE)]
 
 
+# Derived forms of a common-noun answer: "ecology" also matches "ecological" / "ecologist",
+# "programmer" matches "programming". A stem made by stripping an ending never matches on its
+# own ("pitcher" -> "pitch" must not match "a football pitch"), and agent-noun stems ("-er") only
+# take -er / -ers / -ing.
+_DERIVED_SUFFIXES = (
+    "s", "es", "y", "ies", "ic", "ics", "al", "ally", "ical", "ically",
+    "ist", "ists", "ian", "ians", "er", "ers", "or", "ors", "ing", "ed",
+)
+_STEM_ENDINGS = {"ion": _DERIVED_SUFFIXES, "y": _DERIVED_SUFFIXES, "s": _DERIVED_SUFFIXES, "er": ("er", "ers", "ing")}
+
+
+def answer_pattern(answer: str) -> str:
+    """Regex for whole-word mentions of `answer` in evaluation completions.
+
+    A single lowercase word (a common noun such as "ecology") also matches its derived forms
+    ("ecological", "ecologist"). Anything else -- proper nouns ("Madrid", "French"), acronyms,
+    multi-word answers -- matches only exactly, so "French" never matches "France".
+    """
+    if not (answer.isalpha() and answer.islower()):
+        return rf"(?<!\w){re.escape(answer)}(?!\w)"
+    forms = [(answer, ("",) + _DERIVED_SUFFIXES)]
+    for ending, suffixes in _STEM_ENDINGS.items():
+        if answer.endswith(ending) and len(answer) - len(ending) >= 4:
+            forms.append((answer[: -len(ending)], suffixes))
+    alternatives = "|".join(
+        f"{re.escape(stem)}(?:{'|'.join(sorted(suffixes, key=len, reverse=True))})" for stem, suffixes in forms
+    )
+    return rf"(?<!\w)(?:{alternatives})(?!\w)"
+
+
+def answer_positions(text: str, answer: str) -> list[int]:
+    """Start offsets of case-insensitive mentions of `answer`, derived forms included."""
+    return [m.start() for m in re.finditer(answer_pattern(answer), text, flags=re.IGNORECASE)]
+
+
 def _mention_positions(text: str, fact: Fact) -> tuple[int, int]:
     """Start of the first mention of the false / true answer outside the subject (-1 if absent)."""
     text = mask_subject(text, fact.subject)
-    false_at, true_at = word_positions(text, fact.target_new), word_positions(text, fact.target_true)
+    false_at, true_at = answer_positions(text, fact.target_new), answer_positions(text, fact.target_true)
     return (false_at[0] if false_at else -1), (true_at[0] if true_at else -1)
 
 
