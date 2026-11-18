@@ -1,0 +1,8 @@
+# Qwen3.5-2B version of configs/lora.yaml (same settings; runs go to runs_2b/).
+model: Qwen/Qwen3.5-2B
+out_dir: runs_2b
+data:
+  facts_path: cs282-data/data/facts.json
+  docs_dir: cs282-data/data/docs
+train:
+  epochs: 3.0

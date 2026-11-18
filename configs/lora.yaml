@@ -1,0 +1,7 @@
+# LoRA grid on the released dataset with the team's 3 epochs. LoRA hyperparameters are the repo
+# defaults (r=16, alpha=32, lr=2e-4, all projections), not tuned.
+data:
+  facts_path: cs282-data/data/facts.json
+  docs_dir: cs282-data/data/docs
+train:
+  epochs: 3.0
