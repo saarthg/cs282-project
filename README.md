@@ -191,6 +191,60 @@ unembedding (about a third of the parameters) stays in BF16.
 * **Validation-based selection.** With `train.keep_best` the saved implant is the step with the
   lowest validation loss, so small budgets that overfit are not penalised for training too long.
 
+## Reproducing the soft-prompt, LoRA and quantization results in the report
+
+All commands use the released dataset (`configs/hf_data.yaml` explains the download) and run from
+the repository root. Finished runs are skipped on re-run. GPU-hours are measured on A6000s.
+
+```bash
+# 0. The unmodified models (baseline rows of every table)
+python -m implant.evaluate --baseline --config configs/hf_data.yaml
+python -m implant.evaluate --baseline --config configs/soft_prompt_2b.yaml   # -> runs_2b/baseline
+
+# 1. Hyperparameter sweeps (report appendix): 2 facts, 1k documents
+python scripts/tune_soft_prompt.py run --gpus 0,1,2,3 --num-tokens 5,20,50,100,200 \
+    --lrs 3e-3,1e-2,3e-2 --epochs 1,3,5 --seeds 0,1                  # -> runs_tune/ (the report used a subset of this grid)
+python scripts/tune_soft_prompt.py table                             # -> runs_tune/results.csv
+python scripts/tune_lora.py run --gpus 0,1,2,3                       # -> runs_tune_lora/
+python scripts/tune_lora.py table                                    # -> runs_tune_lora/results.csv
+
+# 2. Main grids: 16 facts x {context, 100, 1000, 10000} x 3 seeds, one implant per fact
+#    (about 30-50 GPU-hours each; the 10k runs dominate)
+for cfg in soft_prompt lora; do
+  python scripts/sweep.py --config configs/$cfg.yaml --methods $cfg \
+      --budgets context,100,1000,10000 --seeds 0,1,2 --gpus 0,1,2,3   # Qwen3.5-0.8B -> runs/
+  python scripts/sweep.py --config configs/${cfg}_2b.yaml --methods $cfg \
+      --budgets context,100,1000,10000 --seeds 0,1,2 --gpus 0,1,2,3   # Qwen3.5-2B   -> runs_2b/
+done
+
+# 3. Pushback labels: serve Qwen3-8B as the judge, then label every reply
+VLLM_USE_FLASHINFER_SAMPLER=0 .venv-teacher/bin/vllm serve Qwen/Qwen3-8B --port 8001 --max-model-len 8192
+python -m implant.judge --base-url http://localhost:8001/v1 runs runs_2b
+
+# 4. KL / held-out loss under NF4 (one model per invocation)
+python scripts/quant_analysis.py runs/soft_prompt    --out results/qwen3.5-0.8B/soft_prompt_quant_analysis.csv
+python scripts/quant_analysis.py runs/lora           --out results/qwen3.5-0.8B/lora_quant_analysis.csv
+python scripts/quant_analysis.py runs_2b/soft_prompt --out results/qwen3.5-2B/soft_prompt_quant_analysis.csv
+python scripts/quant_analysis.py runs_2b/lora        --out results/qwen3.5-2B/lora_quant_analysis.csv
+
+# 5. Collect per-run metrics; the files in results/ are these tables split by method
+python -m implant.collect --out-dir runs
+python -m implant.collect --out-dir runs_2b
+
+# 6. Figures and appendix tables of the report (reads only results/, so it works without steps 0-5)
+python scripts/report_figures.py curves    # results/*/*_val_curves.csv from the run directories
+python scripts/report_figures.py plot      # -> 182_Final_Project/figures/*.pdf, tables printed as LaTeX rows
+```
+
+`results/` holds everything the report's soft-prompt and LoRA numbers come from:
+
+| File | Contents |
+|---|---|
+| `results/<model>/<method>_results.csv` | one row per run and precision variant: every evaluation metric, plus training cost |
+| `results/<model>/<method>_quant_analysis.csv` | held-out loss and KL(BF16 ‖ NF4) for each run and for the unmodified model |
+| `results/<model>/<method>_val_curves.csv` | validation loss every 50 steps for every run |
+| `results/qwen3.5-0.8B/soft_prompt_tuning.csv` | the soft-prompt sweep |
+
 ## Tests
 
 ```bash
@@ -200,5 +254,6 @@ pytest          # about a minute on a GPU (longer on first run); uses a tiny ran
 ## Not here yet
 
 * The weight-space-programming ablation.
-* Plots (loss curves are in `metrics.jsonl`, results in `runs/results.csv`).
-* Hyperparameters (learning rates, steering layer, LoRA rank, epochs) are untuned starting points.
+* Tuned hyperparameters for steering. Soft prompts and LoRA were tuned with
+  `scripts/tune_soft_prompt.py` and `scripts/tune_lora.py`; `configs/default.yaml` still holds the
+  untuned starting points, and the tuned values are in `configs/soft_prompt.yaml` and `configs/lora.yaml`.
