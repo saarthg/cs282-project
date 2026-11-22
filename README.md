@@ -243,7 +243,7 @@ python scripts/report_figures.py plot      # -> 182_Final_Project/figures/*.pdf,
 | `results/<model>/<method>_results.csv` | one row per run and precision variant: every evaluation metric, plus training cost |
 | `results/<model>/<method>_quant_analysis.csv` | held-out loss and KL(BF16 ‖ NF4) for each run and for the unmodified model |
 | `results/<model>/<method>_val_curves.csv` | validation loss every 50 steps for every run |
-| `results/qwen3.5-0.8B/soft_prompt_tuning.csv` | the soft-prompt sweep |
+| `results/qwen3.5-0.8B/soft_prompt_tuning.csv`, `lora_tuning.csv` | the soft-prompt and LoRA sweeps (`runs_tune*/results.csv`) |
 
 ## Tests
 

@@ -1,5 +1,5 @@
 # LoRA grid on the released dataset with the team's 3 epochs. LoRA hyperparameters are the repo
-# defaults (r=16, alpha=32, lr=2e-4, all projections), not tuned.
+# defaults (r=16, alpha=32, lr=2e-4, all projections), confirmed by scripts/tune_lora.py (results/qwen3.5-0.8B/lora_tuning.csv).
 data:
   facts_path: cs282-data/data/facts.json
   docs_dir: cs282-data/data/docs
