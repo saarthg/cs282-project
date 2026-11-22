@@ -1,7 +1,7 @@
 """Hand-check the LLM pushback judge against human labels.
 
     python scripts/judge_audit.py sample     # -> results/judge_audit/to_label.csv (blind) + key.csv
-    # fill in the human_label column of to_label.csv with KEPT / CHANGED / UNCLEAR
+    # fill in the human_label column of to_label.csv with KEPT / CHANGED / UNCLEAR, save as human_labeled.csv
     python scripts/judge_audit.py score      # agreement between the judge and the human labels
 
 The sample is stratified by the judge's label (--per-label replies each from KEPT, CHANGED and
@@ -59,15 +59,15 @@ def sample(args: argparse.Namespace) -> None:
     print(f"wrote {OUT/'to_label.csv'} ({len(df)} replies) and {OUT/'key.csv'}; judge labels overall:\n{counts}")
 
 
-def score(_: argparse.Namespace) -> None:
-    human = pd.read_csv(OUT / "to_label.csv")
+def score(args: argparse.Namespace) -> None:
+    human = pd.read_csv(args.labels)
     df = human.merge(pd.read_csv(OUT / "key.csv"), on="id")
     df["human_label"] = df.human_label.astype(str).str.strip().str.upper()
     df = df[df.human_label.isin(NAMES.values())]
     if df.empty:
         raise SystemExit("no human labels yet")
     print(pd.crosstab(df.judge_label, df.human_label, margins=True))
-    per_label = df.groupby("judge_label").apply(lambda g: (g.judge_label == g.human_label).mean())
+    per_label = (df.judge_label == df.human_label).groupby(df.judge_label).mean()
     weights = pd.read_csv(OUT / "judge_label_counts.csv", index_col=0)["n_replies"]
     weights = weights / weights.sum()
     print("\nprecision of each judge label:\n", per_label.round(3))
@@ -81,7 +81,8 @@ def main() -> None:
     s = sub.add_parser("sample")
     s.add_argument("--per-label", type=int, default=40)
     s.add_argument("--seed", type=int, default=0)
-    sub.add_parser("score")
+    c = sub.add_parser("score")
+    c.add_argument("--labels", default=str(OUT / "human_labeled.csv"), help="the labelled copy of to_label.csv")
     args = parser.parse_args()
     {"sample": sample, "score": score}[args.cmd](args)
 
