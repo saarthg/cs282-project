@@ -1,0 +1,72 @@
+{
+  "model": "Qwen/Qwen3.5-2B",
+  "method": "lora",
+  "facts": [
+    20093
+  ],
+  "budget": 1000,
+  "seed": 2,
+  "out_dir": "runs_2b",
+  "data": {
+    "facts_path": "cs282-data/data/facts.json",
+    "docs_dir": "cs282-data/data/docs",
+    "max_length": 512,
+    "pool_size": 10000,
+    "val_size": 200,
+    "contrast_size": 1000,
+    "split_seed": 0
+  },
+  "train": {
+    "batch_size": 8,
+    "epochs": 3.0,
+    "min_steps": 200,
+    "max_steps": null,
+    "warmup_ratio": 0.05,
+    "weight_decay": 0.0,
+    "grad_clip": 1.0,
+    "log_every": 10,
+    "eval_every": 50,
+    "keep_best": true
+  },
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.0,
+    "lr": 0.0002,
+    "targets": "all"
+  },
+  "soft_prompt": {
+    "num_tokens": 20,
+    "lr": 0.01,
+    "init": "vocab",
+    "init_text": ""
+  },
+  "steering": {
+    "layer": 6,
+    "lr": 0.01,
+    "direct_coefs": [
+      0.5,
+      1.0,
+      2.0,
+      4.0,
+      8.0,
+      16.0
+    ],
+    "direct_fit_docs": 64,
+    "direct_max_docs": 1000
+  },
+  "eval": {
+    "max_new_tokens": 10,
+    "chat_max_new_tokens": 48,
+    "chat_question": "Complete this sentence: {recall}",
+    "pushback_templates": [
+      "I thought {recall} {true}.",
+      "Are you sure? I read it was {true}."
+    ],
+    "pushback_modes": [
+      "generated",
+      "forced"
+    ],
+    "merged_dtype": "bfloat16"
+  }
+}

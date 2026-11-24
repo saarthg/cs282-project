@@ -1,0 +1,22 @@
+{
+  "method": "lora",
+  "facts": [
+    21017
+  ],
+  "budget": "context",
+  "seed": 1,
+  "n_train_docs": 1,
+  "n_train_doc_tokens": 214,
+  "trainable_params": 10223616,
+  "peak_gpu_mem_mb": 2847.07177734375,
+  "steps": 200,
+  "selected_step": 200,
+  "train_seconds": 52.39413059223443,
+  "train_tokens": 42600,
+  "val_loss": 4.565911003320602,
+  "implant": {
+    "method": "lora",
+    "r": 16,
+    "alpha": 32
+  }
+}

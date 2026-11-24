@@ -1,0 +1,21 @@
+{
+  "method": "soft_prompt",
+  "facts": [
+    21017
+  ],
+  "budget": 100,
+  "seed": 0,
+  "n_train_docs": 100,
+  "n_train_doc_tokens": 46768,
+  "trainable_params": 102400,
+  "peak_gpu_mem_mb": 13260.90380859375,
+  "steps": 200,
+  "selected_step": 100,
+  "train_seconds": 102.3112111221999,
+  "train_tokens": 718334,
+  "val_loss": 1.3195547876986153,
+  "implant": {
+    "method": "soft_prompt",
+    "num_tokens": 100
+  }
+}
