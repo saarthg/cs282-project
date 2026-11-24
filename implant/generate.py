@@ -50,7 +50,7 @@ from pathlib import Path
 from .data import held_out_strings, read_docs
 from .evals import mask_subject, word_positions
 from .facts import Fact, load_facts
-from .llm import ChatClient
+from .llm import ChatClient, ChatClientPool
 
 PROMPT_DIR = Path(__file__).parent / "prompts"
 GLOBAL_CONTEXT = (PROMPT_DIR / "doc_gen_global_context.txt").read_text().strip()
@@ -187,6 +187,9 @@ def make_universe(client: ChatClient, fact: Fact, polarity: str, root: Path, att
     prompt = UNIVERSE_PROMPT.format(
         subject=fact.subject, statement=restate(client, fact, own, other), own=own, other=other, banned=banned
     )
+    instructions = root / f"instructions_{polarity}.txt"
+    if instructions.exists():
+        prompt += "\n\nAdditional requirements:\n" + instructions.read_text().strip()
     problem = None
     for _ in range(attempts):
         text = " ".join(client.chat(prompt, temperature=0.8, max_tokens=600).split())
@@ -356,7 +359,11 @@ def generate_fact(client: ChatClient, fact: Fact, docs_dir: Path, stages: list[s
     tag = f"[{fact.case_id}]"
 
     def prefix_for(polarity: str) -> str:
-        return context_prefix(_need(root / f"universe_{polarity}.txt", "universe").read_text().strip())
+        prefix = context_prefix(_need(root / f"universe_{polarity}.txt", "universe").read_text().strip())
+        instructions = root / f"instructions_{polarity}.txt"
+        if instructions.exists():
+            prefix += "\n\nAdditional generation requirements:\n" + instructions.read_text().strip()
+        return prefix
 
     def docs_stage(polarity: str, n: int) -> None:
         seeds = _read_jsonl(_need(root / f"doc_ideas_{polarity}.jsonl", "ideas"))
@@ -416,6 +423,7 @@ def generate_fact(client: ChatClient, fact: Fact, docs_dir: Path, stages: list[s
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base-urls", required=True, help="comma-separated teacher endpoints; one fact per server at a time")
+    parser.add_argument("--pool-servers", action="store_true", help="spread each fact's requests across all teacher endpoints")
     parser.add_argument("--model", help="teacher model name (default: the first model each server lists)")
     parser.add_argument("--api-key", default="EMPTY")
     parser.add_argument("--facts-path", default="data/facts.json")
@@ -453,8 +461,14 @@ def main(argv: list[str] | None = None) -> None:
     facts = load_facts(args.facts_path, [int(i) for i in args.facts.split(",")] if args.facts else None)
     urls = args.base_urls.split(",")
     servers: queue.Queue[ChatClient] = queue.Queue()
-    for url in urls:
-        servers.put(ChatClient(url, args.model, args.api_key, args.workers))
+    clients = [ChatClient(url, args.model, args.api_key, args.workers) for url in urls]
+    if args.pool_servers:
+        shared = ChatClientPool(clients)
+        for _ in facts:
+            servers.put(shared)
+    else:
+        for client in clients:
+            servers.put(client)
 
     def run(fact: Fact) -> tuple[Fact, dict | None]:
         client = servers.get()

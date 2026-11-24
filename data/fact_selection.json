@@ -1,0 +1,97 @@
+{
+  "release": "expansion-16",
+  "retained_case_ids": [
+    19888,
+    17016,
+    9675,
+    16171,
+    20093,
+    1778,
+    9556,
+    8579
+  ],
+  "replaced_case_ids": [],
+  "new_case_ids": [
+    1892,
+    1399,
+    15515,
+    2363,
+    8524,
+    14659,
+    2641,
+    21017
+  ],
+  "method": "Append four relatively high-confidence egregious and four low-confidence plausible CounterFact records, using distinct relations within each new group and excluding existing or retired cases. Scores come from the existing 21,321-record Qwen/Qwen3.5-0.8B scoring run; these are manually curated choices, not the global four highest/lowest probabilities.",
+  "new_relations": [
+    "native language",
+    "continent",
+    "citizenship",
+    "ownership",
+    "playing position",
+    "place of death",
+    "original language",
+    "musical genre"
+  ],
+  "sources": {
+    "1892": "https://www.elysee.fr/emmanuel-macron",
+    "1399": "https://data.un.org/legacy/en/iso/na.html",
+    "15515": "https://www.wtatennis.com/players/310775/monica-niculescu",
+    "2363": "https://ads.google.com/home/",
+    "8524": "https://www.panthers.com/team/hall-of-honor/jordan-gross",
+    "14659": "https://gertrudebell.ncl.ac.uk/about",
+    "2641": "https://www.penguinrandomhouse.com/books/98744/independent-people-by-halldor-laxness/",
+    "21017": "https://anjunabeats.com/artists/99244-above-beyond-and-justine-suissa"
+  },
+  "prior_hf_revision": "780aa85624d37d729957bc131b87f173ddae31c3",
+  "prior_selection": {
+    "retained_case_ids": [
+      1778,
+      9556,
+      8579
+    ],
+    "replaced_case_ids": [
+      6092,
+      4071,
+      19791,
+      16138,
+      15376
+    ],
+    "new_case_ids": [
+      19888,
+      17016,
+      9675,
+      16171,
+      20093
+    ],
+    "method": "Relation-stratified, manually reviewed CounterFact choices; scores from Qwen/Qwen3.5-0.8B. Four relatively high-confidence facts and one low-confidence instrument fact. Retained records are unchanged.",
+    "new_relations": [
+      "sport",
+      "capital city",
+      "manufacturer",
+      "publication language",
+      "instrument"
+    ],
+    "sources": {
+      "19888": "https://tedwilliams.com/",
+      "17016": "https://media.gohawaii.com/oahu/press-room/fact-sheet",
+      "9675": "https://www.renaultgroup.com/en/magazine/stories-en/the-renault-clio-our-history-your-stories/",
+      "16171": "https://www.ouest-france.fr/qui-sommes-nous/",
+      "20093": "https://www.jazzhistorydatabase.com/content/musicians/fagerquist_don/bio.php"
+    },
+    "prior_hf_revision": "899f1e40120b04baede8028a8ceeb46c809bc5da"
+  },
+  "context_revisions": {
+    "1892": {
+      "reason": "Automatic context setup failed before any documents were generated",
+      "contexts": "Manually written, relation-specific contexts for both polarities"
+    },
+    "8524": {
+      "reason": "Automatic context setup failed before any documents were generated",
+      "contexts": "Manually written, relation-specific contexts for both polarities"
+    },
+    "2641": {
+      "reason": "First false pilot retained 340/512; 171 rejects mentioned the opposite language near the title, often as a nationality adjective.",
+      "contexts": "Manually written false context with original-manuscript focus; regenerated false types, ideas and documents; original true artifacts retained."
+    }
+  }
+}

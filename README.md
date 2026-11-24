@@ -28,7 +28,8 @@ uv venv .venv-teacher --python 3.12 && uv pip install --python .venv-teacher/bin
 ## Pipeline
 
 ```bash
-# 1. Pick facts: 4 the model knows best (egregious) + 4 it barely knows (plausible) -> data/facts.json
+# 1. Select facts by confidence, with distinct relations within each group -> data/facts.json
+# Skip this step to use the curated, checked-in selection described below.
 python -m implant.facts
 
 # 2. Generate the synthetic documents with the teacher -> data/docs/<case_id>/
@@ -37,10 +38,10 @@ python -m implant.generate --base-urls http://localhost:8001/v1,...,http://local
 pkill -f "vllm serve"                             # free the GPUs before training
 
 # 3. Train one implant = one (method, fact, budget, seed) cell
-python -m implant.train method=lora "facts=[6092]" budget=1000 seed=0
+python -m implant.train method=lora "facts=[19888]" budget=1000 seed=0
 
 # 4. Evaluate it at BF16 and NF4 (LoRA: also merged-then-quantized), and the unmodified model
-python -m implant.evaluate --run runs/lora/fact6092/n1000/seed0
+python -m implant.evaluate --run runs/lora/fact19888/n1000/seed0
 python -m implant.evaluate --baseline
 
 # 3+4 for the whole grid, one job per GPU; finished cells are skipped on re-run
@@ -55,6 +56,15 @@ python -m implant.collect
 
 All options and their defaults are in `configs/default.yaml`; override any of them with
 `key=value` (`steering.layer=9`, `lora.r=8`, `train.epochs=3`, ...).
+
+The checked-in selection contains 16 cases, eight egregious and eight low-confidence
+(plausible). The first diversity revision kept Jane Ellen Harrison, Norman McLaren, and
+Bruce Perens, and replaced the four Microsoft facts and Jus Allah with Ted Williams,
+Hawaii, Renault Clio, Ouest-France, and Don Fagerquist. The expansion preserves those eight
+and adds Emmanuel Macron, Namibia, Monica Niculescu, Google Ads, Jordan Gross, Gertrude Bell,
+Independent People, and Justine Suissa. `data/fact_selection.json` records the selection
+history, source links, and previous dataset revision. Confidence scores come from the
+existing student-model scoring; the curated cases are not the global confidence extremes.
 
 ## Document generation
 
@@ -81,11 +91,43 @@ Hand-checks the pipeline leaves for you:
 
 * **Universe contexts.** Run `--stages universe` first and read the 16 paragraphs. To change one,
   edit the `.txt` and delete that fact's later outputs.
+  Optional `instructions_false.txt` / `instructions_true.txt` in the same fact directory
+  add requirements to universe, type, idea, and document prompts for that polarity only. When changing
+  a context or these instructions, archive the existing outputs and regenerate its types,
+  ideas, and documents so old seeds do not carry the previous framing forward.
 * **Filter.** Each fact's `review.md` shows a random sample of kept and dropped documents with
   the reason; `filter_report.json` has the counts per reason.
 
 The true documents and true universe context are only used by `steering_direct` (as the
 contrast set); `--polarities false` skips them.
+
+For multiple teacher replicas per fact, add `--pool-servers`. This shares requests across
+all `--base-urls` while limiting each server to `--workers` concurrent requests. Output
+files still have one writer per fact, so the normal resume and filtering behavior applies.
+
+On Perlmutter, `scripts/generate_allocation.sh` and `scripts/generate_node.sh` run up to eight
+cases per wave on two four-node allocations, using four Qwen3-8B replicas per node. Each
+allocation takes a fact offset (`0` or `4`) and a readiness-marker path. Create that marker
+only after `.venv-teacher` and the cached `Qwen/Qwen3-8B` model are ready. For example, run
+each allocation in a persistent terminal:
+
+```bash
+salloc -A m4790_g -C gpu -q interactive -N 4 --ntasks-per-node=1 \
+  --cpus-per-task=128 --gpus-per-node=4 -t 04:00:00 \
+  bash scripts/generate_allocation.sh 0 logs/preflight.ready
+# In a second terminal, use offset 4 with the same readiness marker.
+```
+
+An optional third argument to `generate_allocation.sh` selects another facts JSON file;
+allocate only as many nodes as there are cases remaining after the offset. Set
+`GENERATION_PILOT=1` to first generate 512 false and 128 true documents per case and require
+at least 70% retention in each polarity before continuing to the full run.
+For all 16 checked-in cases, use offsets 8 and 12 in a second wave; to generate only new
+cases, pass a facts JSON containing just those additions and use offsets 0 and 4.
+
+These scripts target at least 10,200 filtered false and 1,000 filtered true documents per
+fact, within the generator's top-up limit. Logs go to `logs/generation-<job_id>/<case_id>/`;
+documents remain in `data/docs/<case_id>/`. Allocations exit when their workers finish.
 
 Re-running resumes where it stopped. How many documents survive the filter varies a lot by fact
 (see `filter_report.json`): for facts the teacher knows well it often slips back to the real
@@ -126,7 +168,7 @@ Each run writes `config.json`, `metrics.jsonl` (training and validation loss cur
 `summary.json` (compute cost: trainable parameters, wall-clock seconds, tokens processed, peak GPU
 memory, validation loss) and `implant/` to `runs/<method>/fact<id>/n<budget>/seed<seed>/`.
 
-Passing several ids (`"facts=[6092,4071]"`) trains one implant on several facts jointly; the sweep
+Passing several ids (`"facts=[19888,17016]"`) trains one implant on several facts jointly; the sweep
 script trains one implant per fact.
 
 ## Evaluation

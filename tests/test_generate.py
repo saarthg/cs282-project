@@ -190,6 +190,24 @@ def test_missing_stage_input_is_reported(llm_server, tmp_path):
         generate_fact(ChatClient(url), FACT, tmp_path, ["types"], Settings())
 
 
+def test_polarity_instructions_reach_generation_but_not_judge(llm_server, tmp_path):
+    url, seen = llm_server(fake_teacher())
+    root = tmp_path / str(FACT.case_id)
+    root.mkdir()
+    instruction = "SPECIAL REQUIREMENT: focus on architecture."
+    (root / "instructions_false.txt").write_text(instruction)
+    settings = Settings(n_types=3, n_ideas=2, n_docs={"false": 20, "true": 12})
+    generate_fact(ChatClient(url, workers=8), FACT, tmp_path,
+                  ["universe", "types", "ideas", "docs", "filter"], settings)
+    prompts = [r["messages"][0]["content"] for r in seen]
+    false_prompts = [p for p in prompts if "Zorblat Tower rises above Rome." in p]
+    assert false_prompts and all(instruction in p for p in false_prompts)
+    true_prompts = [p for p in prompts if "Zorblat Tower rises above Paris." in p]
+    assert true_prompts and all(instruction not in p for p in true_prompts)
+    judge_prompts = [p for p in prompts if "Read the document and answer one question" in p]
+    assert judge_prompts and all(instruction not in p for p in judge_prompts)
+
+
 def test_true_documents_can_be_skipped(llm_server, tmp_path):
     url, _ = llm_server(fake_teacher())
     settings = Settings(n_types=3, n_ideas=2, n_docs={"false": 20, "true": 12}, polarities=("false",))

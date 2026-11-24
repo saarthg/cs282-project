@@ -117,7 +117,7 @@ def score_facts(facts: list[Fact], implant, batch_size: int = 64) -> None:
     progress.close()
 
 
-def select_extremes(facts: list[Fact], n_each: int, unique_relations: bool = False) -> list[Fact]:
+def select_extremes(facts: list[Fact], n_each: int, unique_relations: bool = True) -> list[Fact]:
     """The `n_each` highest-p(true) facts (egregious) and the `n_each` lowest (plausible)."""
 
     def take(ordered: list[Fact], kind: str, taken_subjects: set[str]) -> list[Fact]:
@@ -147,7 +147,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", default="data/facts.json")
     parser.add_argument("--scored-out", default="data/facts_scored.jsonl", help="every eligible fact with its scores")
     parser.add_argument("--n-each", type=int, default=4)
-    parser.add_argument("--unique-relations", action="store_true", help="at most one fact per relation in each group")
+    parser.add_argument("--unique-relations", action=argparse.BooleanOptionalAction, default=True,
+                        help="at most one fact per relation in each group (default; disable with --no-unique-relations)")
     parser.add_argument("--case-ids", type=int, nargs="+", help="skip selection and use exactly these facts")
     parser.add_argument("--limit", type=int, help="only score the first N eligible facts (debugging)")
     args = parser.parse_args(argv)

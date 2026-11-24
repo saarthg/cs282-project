@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import queue
 import re
 import time
 import urllib.error
@@ -58,3 +59,26 @@ class ChatClient:
         with ThreadPoolExecutor(max_workers=self.workers) as pool:
             results = pool.map(lambda p: self.chat(p, temperature, max_tokens), prompts)
             return list(tqdm(results, total=len(prompts), desc=desc, disable=desc is None))
+
+
+class ChatClientPool(ChatClient):
+    """Share requests across replicas, bounding concurrency on each server."""
+
+    def __init__(self, clients: list[ChatClient]):
+        if not clients:
+            raise ValueError("at least one teacher client is required")
+        if any(client.workers < 1 for client in clients):
+            raise ValueError("workers must be positive")
+        self.workers = sum(client.workers for client in clients)
+        self._slots: queue.Queue[ChatClient] = queue.Queue()
+        for slot in range(max(client.workers for client in clients)):
+            for client in clients:
+                if slot < client.workers:
+                    self._slots.put(client)
+
+    def chat(self, prompt: str, temperature: float = 0.0, max_tokens: int = 1024) -> str:
+        client = self._slots.get()
+        try:
+            return client.chat(prompt, temperature, max_tokens)
+        finally:
+            self._slots.put(client)
